@@ -3,6 +3,7 @@
 #include "../includes/baker.h"
 #include "../includes/externs.h"
 #include "../includes/PRINT.h"
+#include "../includes/constants.h"
 using namespace std;
 
 //ID is just a number used to identify this particular baker
@@ -29,16 +30,15 @@ void Baker::bake_and_box(ORDER &anOrder) {
 		boxx.addDonut(donutt);
 		donutsInBox++;
 
-		//If the number of donuts in our boxx = 12, box is full so push to vector and clear for restart
-		if (dCount == 12) {
-			lock_guard<mutex> lg(mutex_order_outQ);
+		//If the number of donuts in our box = 12, box is full so push to vector and clear for restart
+		if (donutsInBox == DOZEN) {
 			anOrder.boxes.push_back(boxx);
 			boxx.clear();
 		}
 	}
 
-	//Make sure we're not going to be wasting a box, If box has donuts we push box and clear for next order
-	if (boxx.size() > 0) {
+	//Make sure we're not going to be wasting an empty box, If box has donuts we push box and clear for next order
+	if (!boxx.size() > 0) {
 		anOrder.boxes.push_back(boxx);
 		boxx.clear();
 	}
@@ -58,7 +58,7 @@ void Baker::beBaker() {
 	while(!order_in_Q.empty() && !b_WaiterIsFinished) {
 		unique_lock<mutex> ul(mutex_order_inQ);
 
-		//if we have no orders or if the waiter isn't done taking orders, then we wait
+		//if we currently have no orders but the waiter isn't done taking orders, then we wait
 		while (order_in_Q.empty() && !b_WaiterIsFinished) {
 			cv_order_inQ.wait(ul);
 		}
@@ -69,6 +69,7 @@ void Baker::beBaker() {
 			ORDER order = order_in_Q.front();
 			bake_and_box(order);
 			order_in_Q.pop();
+
 			lock_guard<mutex> lg(mutex_order_outQ);
 			order_out_Vector.push_back(order);
 		}
