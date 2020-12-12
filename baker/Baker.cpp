@@ -38,7 +38,7 @@ void Baker::bake_and_box(ORDER &anOrder) {
 	}
 
 	//Make sure we're not going to be wasting an empty box, If box has donuts we push box and clear for next order
-	if (!boxx.size() > 0) {
+	if (boxx.size() > 0) {
 		anOrder.boxes.push_back(boxx);
 		boxx.clear();
 	}
